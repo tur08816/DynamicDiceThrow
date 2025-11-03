@@ -1,10 +1,12 @@
 package edu.temple.dicethrow
 
 import android.os.Bundle
+import android.view.View
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
+import androidx.lifecycle.ViewModelProvider
 
 
 /*
@@ -19,14 +21,61 @@ The Activity layout files for both Portrait and Landscape are already provided
 */
 
 class MainActivity : AppCompatActivity(), ButtonFragment.ButtonInterface {
+
+    private var hasTwoColumns = false
+
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+
+        hasTwoColumns = findViewById<View>(R.id.container2) != null
 
         /* TODO 1: Load fragment(s)
             - Show _only_ ButtonFragment if portrait
             - show _both_ fragments if Landscape
           */
+        val dieViewModel = ViewModelProvider(this)[DieViewModel::class.java]
+        val buttonFragment = ButtonFragment();
+        val dieFragment = DieFragment()
+
+        if(savedInstanceState == null){
+            if(!hasTwoColumns){
+                supportFragmentManager
+                    .beginTransaction()
+                    .add(R.id.container1,buttonFragment)
+                    .commit()
+            }
+            if(hasTwoColumns){
+                supportFragmentManager
+                    .beginTransaction()
+                    .replace(R.id.container1,buttonFragment)
+                    .add(R.id.container2,dieFragment)
+                    .commit()
+            }
+        }
+        dieViewModel.getDieRoll().observe(this){
+            if(!hasTwoColumns){
+                supportFragmentManager
+                    .beginTransaction()
+                    .replace(R.id.container1,dieFragment)
+                    .setReorderingAllowed(true)
+                    .addToBackStack(null)
+                    .commit()
+            }
+            if(hasTwoColumns){
+                supportFragmentManager
+                    .beginTransaction()
+                    .replace(R.id.container1,buttonFragment)
+                    .replace(R.id.container2,dieFragment)
+                    .setReorderingAllowed(true)
+                    .addToBackStack(null)
+                    .commit()
+            }
+        }
+
+
+
     }
 
     /* TODO 2: switch fragments if die rolled and in portrait (no need to switch fragments if Landscape)
